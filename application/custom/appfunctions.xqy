@@ -331,9 +331,10 @@ as element(div)
 
 (:~
  : Base script elements for Javascript.
+ :)
 
 declare function app:js()
-as element()*
+    as element()*
 {
     (<script src="/yui/yahoo-dom-event/yahoo-dom-event.js" type="text/javascript"><!-- --></script>,
      <script src="/yui/container/container_core-min.js" type="text/javascript"><!-- --></script>,
@@ -343,25 +344,31 @@ as element()*
      <script src="/yui/connection/connection-min.js" type="text/javascript"><!-- --></script> ,
      <script src="/yui/autocomplete/autocomplete-min.js" type="text/javascript" ><!-- --></script>,
      <script src="/js/application.js" type="text/javascript"><!-- --></script>,
+     (: add this (your jquery file may be a different version) ... :)
+     <script type="text/javascript" src="/custom/js/jquery-1.4.4.js"></script>,
      $config:ADDITIONAL-JS,
+     (: and this... :)
+     if ($config:CONTEXT/*:view = ("intro")) then (
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>,
+        <script type="text/javascript" src="/custom/js/maps.js"></script>)
+     else (),
      <script type="text/javascript" charset="utf-8">
-            // Sort menu
-            {
-            if (count($config:OPTIONS/search:operator[@name eq "sort"]/search:state) > 0)
-            then concat(
-              'var sort_menu_content = [',
-               xdmp:apply($config:sort-menu-content,$config:OPTIONS,$config:CONTEXT/*:q,$config:LABELS),
-              ']')
-            else ()
-            }
-            // Category toggle
-            var toggle_list_size = [
-             { xdmp:apply($config:facet-toggle-content,$config:OPTIONS) }
-            ]
-            new ListToggler(toggle_list_size);
-      </script>)
+        // Sort menu
+        {
+        if (count($config:OPTIONS/search:operator[@name eq "sort"]/search:state) > 0)
+        then concat(
+            'var sort_menu_content = [',
+            xdmp:apply($config:sort-menu-content,$config:OPTIONS,$config:CONTEXT/*:q,$config:LABELS),
+            ']')
+        else ()
+        }
+        // Category toggle
+        var toggle_list_size = [
+            { xdmp:apply($config:facet-toggle-content,$config:OPTIONS) }
+        ]
+        new ListToggler(toggle_list_size);
+    </script>)
 };
-:)
 
 (:~
  : Page header, including search input box.
@@ -609,7 +616,7 @@ declare function app:doctype()
 
 (:~
  : Create content based on current view.
-
+ :)
 declare function app:get-content()
 {
     let $view := $config:CONTEXT/*:view
@@ -618,7 +625,9 @@ declare function app:get-content()
         then (
             xdmp:apply($config:toolbar),
             if (data($config:RESPONSE/@total) eq 0)
-            then xdmp:apply($config:error-message, concat("Your search for ",$config:CONTEXT/*:q," did not match anything. Make sure all words are spelled correctly or try different keywords."))
+            then xdmp:apply($config:error-message, 
+                concat("Your search for ",$config:CONTEXT/*:q,
+                       " did not match anything. Make sure all words are spelled correctly or try different keywords."))
             else (
                 xdmp:apply($config:result-navigation),
                 xdmp:apply($config:results),
@@ -633,9 +642,10 @@ declare function app:get-content()
         then xdmp:apply($config:help)
         else if ($view eq "contact")
         then xdmp:apply($config:contact)
+        else if ($view eq "intro") then
+            <div id="map" style="width:100%; height:300px"/>
         else xdmp:apply($config:browse)
 };
-:)
 
 (:~
  : Prepare a facet for chiclet removal.
